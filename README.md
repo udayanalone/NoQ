@@ -1,6 +1,5 @@
 # NoQ - Queue Management System
 
-![Project Banner](./assets/banner.png) <!-- Recommended banner size: 1200x600 -->
 
 ## 📋 Project Overview
 A modern queue management system for businesses to manage customer flow and appointments efficiently.
