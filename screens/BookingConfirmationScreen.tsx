@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-na
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { RootStackParamList } from '../navigation/type'
 import { Ionicons } from '@expo/vector-icons'
-// import QRCode from 'react-native-qrcode-svg'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BookingConfirmation'>
 
@@ -43,13 +42,11 @@ export function BookingConfirmationScreen({ route, navigation }: Props) {
         <Text style={styles.timeSlot}>3:00 PM - 3:30 PM</Text>
         <Text style={styles.groupSize}>Group Size: 1 Adult</Text>
         
-        <View style={styles.qrSection}>
-          <View style={styles.qrContainer}>
-            <View style={styles.qrPlaceholder}>
-              <Ionicons name="qr-code" size={80} color="#333" />
-              <Text style={styles.qrText}>QR Code</Text>
-              <Text style={styles.qrSubtext}>Booking ID: {bookingId}</Text>
-            </View>
+        <View style={styles.bookingIdSection}>
+          <View style={styles.bookingIdContainer}>
+            <Text style={styles.bookingIdLabel}>Your Booking ID</Text>
+            <Text style={styles.bookingIdValue}>{bookingId}</Text>
+            <Text style={styles.bookingIdInstructions}>Show this ID at the store to check in</Text>
           </View>
           <Ionicons name="chevron-down" size={24} color="#20B2AA" style={styles.scrollIcon} />
         </View>
@@ -119,33 +116,38 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 20,
   },
-  qrSection: {
+  bookingIdSection: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  qrContainer: {
+  bookingIdContainer: {
     flex: 1,
     alignItems: 'center',
-  },
-  qrPlaceholder: {
-    alignItems: 'center',
-    padding: 20,
     backgroundColor: '#fff',
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#eee',
+    padding: 20,
+    borderWidth: 2,
+    borderColor: '#20B2AA',
+    marginVertical: 10,
   },
-  qrText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginTop: 8,
-  },
-  qrSubtext: {
-    fontSize: 12,
+  bookingIdLabel: {
+    fontSize: 14,
     color: '#666',
-    marginTop: 4,
+    marginBottom: 8,
+  },
+  bookingIdValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginVertical: 10,
+    letterSpacing: 1,
+  },
+  bookingIdInstructions: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 8,
   },
   scrollIcon: {
     marginLeft: 16,

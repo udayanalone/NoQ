@@ -2,15 +2,20 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, Alert, TextInput, TouchableOpacity, ScrollView, SafeAreaView } from "react-native";
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { RootStackParamList } from "../navigation/type";
-import { storeInfo } from '../dummy/data';
-import { user } from '../dummy/data';
+// import { storeInfo } from '../dummy/data';
+import { useAppContext } from '../context/AppContext';
 import { Ionicons } from '@expo/vector-icons';
+import { api } from '../lib/api';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SlotBooking'>
 
 export function SlotBookingScreen({ route, navigation }: Props) {
     const { storeId, selectedSlot } = route.params;
-    const store = storeInfo.find(s => s.id === storeId) || storeInfo[0];
+    const { addBooking, user } = useAppContext();
+    const [storeName, setStoreName] = useState<string>('');
+    React.useEffect(()=>{
+        api.getStore(storeId).then((s)=>setStoreName(s.name)).catch(()=>{})
+    },[storeId])
 
     const [name, setName] = useState(user.name);
     const [phone, setPhone] = useState(user.phone);
@@ -23,8 +28,47 @@ export function SlotBookingScreen({ route, navigation }: Props) {
             return;
         }
 
+        const newBooking = {
+            userEmail: user.email,
+            userName: name,
+            userPhone: phone,
+            storeId,
+            storeName: storeName || 'Store',
+            date: getCurrentDate(),
+            time: selectedSlot,
+            status: 'confirmed' as const,
+            notes,
+            people: Number(people) || 1,
+        } as const;
+
+        api.createBooking(newBooking).then((created)=>{
+            addBooking({
+                storeId: created.storeId,
+                storeName: created.storeName,
+                date: created.date,
+                time: created.time,
+                status: created.status,
+            })
+        }).catch((e)=>{
+            Alert.alert('Failed to create booking', e.message)
+            return
+        })
+
         const bookingId = `${storeId}-${Date.now()}`;
-        navigation.navigate('BookingConfirmation', { bookingId });
+        Alert.alert(
+            'Booking Confirmed!',
+            `Your booking has been created successfully.`,
+            [
+                {
+                    text: 'View My Bookings',
+                    onPress: () => navigation.navigate('Reservations')
+                },
+                {
+                    text: 'Continue',
+                    onPress: () => navigation.navigate('BookingConfirmation', { bookingId })
+                }
+            ]
+        );
     };
 
     const getCurrentDate = () => {
@@ -67,7 +111,7 @@ export function SlotBookingScreen({ route, navigation }: Props) {
                     
                     <View style={styles.storeInfo}>
                         <Text style={styles.storeLabel}>Store Name</Text>
-                        <Text style={styles.storeName}>{store.name}</Text>
+                        <Text style={styles.storeName}>{storeName}</Text>
                     </View>
                     
                     <View style={styles.slotInfo}>

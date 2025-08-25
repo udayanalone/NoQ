@@ -8,17 +8,35 @@ import HomeScreen from '../screens/HomeScreen'
 import StoreDetailsScreen from '../screens/StoreDetailsScreen'
 import SlotBookingScreen from '../screens/SlotBookingScreen'
 import BookingConfirmationScreen from '../screens/BookingConfirmationScreen'
-import CheckInScreen from '../screens/CheckInScreen'
+import { CheckInScreen } from '../screens/CheckInScreen'
 import { ProfileScreen } from '../screens/ProfileScreen'
-import ReservationsScreen from '../screens/ReservationsScreen'
+import { ReservationsScreen } from '../screens/ReservationsScreen'
+import { LoginScreen } from '../screens/LoginScreen'
+import { SignUpScreen } from '../screens/SignUpScreen'
+import { StoreOwnerDashboardScreen } from '../screens/StoreOwnerDashboardScreen'
+import { EditStoreScreen } from '../screens/EditStoreScreen'
+import { ManageBookingsScreen } from '../screens/ManageBookingsScreen'
 
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
 
-function HomeStack() {
+function TabNavigator() {
   return (
-    <Stack.Navigator
-      screenOptions={{
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName
+          if (route.name === 'HomeTab') {
+            iconName = focused ? 'home' : 'home-outline'
+          } else if (route.name === 'ReservationsTab') {
+            iconName = focused ? 'calendar' : 'calendar-outline'
+          } else if (route.name === 'CheckInTab') {
+            iconName = focused ? 'enter' : 'enter-outline'
+          } else if (route.name === 'ProfileTab') {
+            iconName = focused ? 'person' : 'person-outline'
+          }
+          return <Ionicons name={iconName as any} size={size} color={color} />
+        },
         headerStyle: {
           backgroundColor: '#007AFF',
         },
@@ -26,89 +44,53 @@ function HomeStack() {
         headerTitleStyle: {
           fontWeight: 'bold',
         },
-      }}
+      })}
     >
-      <Stack.Screen
-        name="Home"
+      <Tab.Screen
+        name="HomeTab"
         component={HomeScreen}
         options={{
-          title: 'NoQ - Find Stores',
+          title: 'NoQ - Home',
+          headerShown: false,
+        }}
+      />
+      <Tab.Screen
+        name="ReservationsTab"
+        component={ReservationsScreen}
+        options={{
+          title: 'NoQ - Reservations',
+          headerShown: false,
+        }}
+      />
+      <Tab.Screen
+        name="CheckInTab"
+        component={CheckInScreen as any}
+        options={{
+          title: 'NoQ - Check-In',
           headerRight: () => (
-            <Ionicons name="search" size={24} color="#fff" style={{ marginRight: 16 }} />
+            <Ionicons name="help-circle" size={24} color="#fff" style={{ marginRight: 16 }} />
           ),
         }}
       />
-      <Stack.Screen
-        name="StoreDetails"
-        component={StoreDetailsScreen}
+      <Tab.Screen
+        name="ProfileTab"
+        component={ProfileScreen}
         options={{
-          title: 'Store Details',
-          headerBackTitle: 'Back',
+          title: 'NoQ - Profile',
+          headerRight: () => (
+            <Ionicons name="settings" size={24} color="#fff" style={{ marginRight: 16 }} />
+          ),
         }}
       />
-              <Stack.Screen
-          name="SlotBooking"
-          component={SlotBookingScreen as any}
-          options={{
-            title: 'Book Slot',
-            headerBackTitle: 'Back',
-          }}
-        />
-        <Stack.Screen
-          name="BookingConfirmation"
-          component={BookingConfirmationScreen as any}
-          options={{
-            title: 'Booking Confirmed',
-            headerBackTitle: 'Back',
-            headerLeft: () => null, // Prevent going back
-          }}
-        />
-    </Stack.Navigator>
-  )
-}
-
-function ReservationsStack() {
-  return (
-    <Stack.Navigator
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: '#007AFF',
-        },
-        headerTintColor: '#fff',
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
-      }}
-    >
-      <Stack.Screen
-        name="Reservations"
-        component={ReservationsScreen}
-        options={{
-          title: 'My Reservations',
-        }}
-      />
-    </Stack.Navigator>
+    </Tab.Navigator>
   )
 }
 
 export default function RootNavigator() {
   return (
     <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }) => {
-            let iconName
-            if (route.name === 'HomeTab') {
-              iconName = focused ? 'home' : 'home-outline'
-            } else if (route.name === 'ReservationsTab') {
-              iconName = focused ? 'calendar' : 'calendar-outline'
-            } else if (route.name === 'CheckInTab') {
-              iconName = focused ? 'qr-code' : 'qr-code-outline'
-            } else if (route.name === 'ProfileTab') {
-              iconName = focused ? 'person' : 'person-outline'
-            }
-            return <Ionicons name={iconName as any} size={size} color={color} />
-          },
+      <Stack.Navigator
+        screenOptions={{
           headerStyle: {
             backgroundColor: '#007AFF',
           },
@@ -116,45 +98,64 @@ export default function RootNavigator() {
           headerTitleStyle: {
             fontWeight: 'bold',
           },
-        })}
+        }}
       >
-        <Tab.Screen
-          name="HomeTab"
-          component={HomeStack}
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="SignUp"
+          component={SignUpScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="MainTabs"
+          component={TabNavigator}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="StoreOwnerDashboard"
+          component={StoreOwnerDashboardScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="EditStore"
+          component={EditStoreScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ManageBookings"
+          component={ManageBookingsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="StoreDetails"
+          component={StoreDetailsScreen}
           options={{
-            title: 'Home',
-            headerShown: false, // Hide header since HomeStack has its own
+            title: 'NoQ - Store Details',
+            headerBackTitle: 'Back',
           }}
         />
-        <Tab.Screen
-          name="ReservationsTab"
-          component={ReservationsStack}
+        <Stack.Screen
+          name="SlotBooking"
+          component={SlotBookingScreen as any}
           options={{
-            title: 'Reservations',
-            headerShown: false, // Hide header since ReservationsStack has its own
+            title: 'NoQ - Book Slot',
+            headerBackTitle: 'Back',
           }}
         />
-        <Tab.Screen
-          name="CheckInTab"
-          component={CheckInScreen as any}
+        <Stack.Screen
+          name="BookingConfirmation"
+          component={BookingConfirmationScreen as any}
           options={{
-            title: 'Check-In',
-            headerRight: () => (
-              <Ionicons name="help-circle" size={24} color="#fff" style={{ marginRight: 16 }} />
-            ),
+            title: 'NoQ - Booking Confirmed',
+            headerBackTitle: 'Back',
+            headerLeft: () => null, // Prevent going back
           }}
         />
-        <Tab.Screen
-          name="ProfileTab"
-          component={ProfileScreen}
-          options={{
-            title: 'Profile',
-            headerRight: () => (
-              <Ionicons name="settings" size={24} color="#fff" style={{ marginRight: 16 }} />
-            ),
-          }}
-        />
-      </Tab.Navigator>
+      </Stack.Navigator>
     </NavigationContainer>
   )
 }

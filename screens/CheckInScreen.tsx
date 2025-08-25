@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Alert } from 'react-native'
-// import { BarCodeScanner } from 'expo-barcode-scanner'
+import React, { useState } from 'react'
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Alert, TextInput } from 'react-native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { RootStackParamList } from '../navigation/type'
 import { Ionicons } from '@expo/vector-icons'
@@ -8,51 +7,24 @@ import { Ionicons } from '@expo/vector-icons'
 type Props = NativeStackScreenProps<RootStackParamList, 'CheckIn'>
 
 export function CheckInScreen({ navigation }: Props) {
-  const [hasPermission, setHasPermission] = useState<null | boolean>(null)
-  const [scanned, setScanned] = useState(false)
+  const [bookingId, setBookingId] = useState('')
   const [isCheckedIn, setIsCheckedIn] = useState(false)
 
-  useEffect(() => {
-    const requestPermission = async () => {
-      // const { status } = await BarCodeScanner.requestPermissionsAsync()
-      // setHasPermission(status === 'granted')
-      setHasPermission(true) // Temporarily set to true for testing
-    }
-    requestPermission()
-  }, [])
-
-  const handleBarCodeScanned = ({ data }: { data: string }) => {
-    setScanned(true)
-
-    // For demo: Accept any QR with "NoQ"
-    if (data.includes('NoQ') || data.length > 0) {
+  const handleCheckIn = () => {
+    if (bookingId.trim().length > 0) {
       setIsCheckedIn(true)
-      Alert.alert('Check-In Successful ✅', `Booking ID: ${data}`)
+      Alert.alert('NoQ Check-In Successful ✅', `Booking ID: ${bookingId}`)
     } else {
-      Alert.alert('Invalid QR Code ❌')
+      Alert.alert('Invalid Booking ID ❌', 'Please enter a valid booking ID')
     }
   }
 
   const handleViewBooking = () => {
     // Navigate to booking details or home
-    navigation.navigate('Home')
+    navigation.navigate('MainTabs' as any)
   }
 
-  if (hasPermission === null) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.loadingText}>Requesting camera permission...</Text>
-      </SafeAreaView>
-    )
-  }
 
-  if (hasPermission === false) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.loadingText}>No access to camera. Enable permissions in settings.</Text>
-      </SafeAreaView>
-    )
-  }
 
   if (isCheckedIn) {
     return (
@@ -62,7 +34,7 @@ export function CheckInScreen({ navigation }: Props) {
           <View style={styles.confirmationIcon}>
             <Ionicons name="checkmark" size={40} color="#fff" />
           </View>
-          <Text style={styles.confirmationText}>Checked In to{'\n'}Tech Haven Electronics</Text>
+          <Text style={styles.confirmationText}>Checked In to{'\n'}NoQ Store</Text>
         </View>
 
         {/* Booking Details Card */}
@@ -79,7 +51,7 @@ export function CheckInScreen({ navigation }: Props) {
 
         {/* Action Button */}
         <TouchableOpacity style={styles.viewBookingButton} onPress={handleViewBooking}>
-          <Text style={styles.buttonText}>View My Booking</Text>
+          <Text style={styles.buttonText}>View My NoQ Booking</Text>
         </TouchableOpacity>
       </SafeAreaView>
     )
@@ -87,17 +59,27 @@ export function CheckInScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.scannerSection}>
-        <Text style={styles.title}>Scan Your Booking QR</Text>
-        <View style={styles.scanner}>
-          <Text style={styles.scannerText}>📱 Camera Scanner Placeholder</Text>
-          <Text style={styles.scannerSubtext}>Barcode scanner temporarily disabled</Text>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>NoQ Check-In</Text>
+        <Text style={styles.headerSubtitle}>Enter Your Booking ID</Text>
+      </View>
+
+      <View style={styles.formSection}>
+        <View style={styles.inputContainer}>
+          <Text style={styles.inputLabel}>Booking ID</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your booking ID"
+            value={bookingId}
+            onChangeText={setBookingId}
+            autoCapitalize="none"
+          />
         </View>
-        {scanned && (
-          <TouchableOpacity style={styles.scanAgainButton} onPress={() => setScanned(false)}>
-            <Text style={styles.scanAgainText}>Scan Again</Text>
-          </TouchableOpacity>
-        )}
+        
+        <TouchableOpacity style={styles.checkInButton} onPress={handleCheckIn}>
+          <Text style={styles.buttonText}>Check In</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   )
@@ -108,6 +90,25 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingHorizontal: 20,
+  },
+  header: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    paddingTop: 40,
+    marginHorizontal: -20,
+    marginTop: -20,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#fff',
+    opacity: 0.9,
   },
   loadingText: {
     fontSize: 16,
@@ -174,52 +175,34 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  scannerSection: {
+  formSection: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     paddingTop: 40,
   },
-  title: {
-    fontSize: 20,
-    marginBottom: 16,
-    fontWeight: '600',
-    color: '#333',
+  inputContainer: {
+    marginBottom: 20,
   },
-  scanner: {
-    height: 300,
-    width: '100%',
-    borderRadius: 12,
-    backgroundColor: '#f8f8f8',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#eee',
-    borderStyle: 'dashed',
-  },
-  scannerText: {
-    textAlign: 'center',
-    padding: 20,
+  inputLabel: {
     fontSize: 16,
-    color: '#666',
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 8,
   },
-  scannerSubtext: {
-    textAlign: 'center',
-    color: '#999',
-    fontSize: 14,
+  input: {
+    backgroundColor: '#f8f8f8',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
   },
-  scanAgainButton: {
+  checkInButton: {
     marginTop: 20,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingVertical: 16,
     backgroundColor: '#20B2AA',
     borderRadius: 8,
-  },
-  scanAgainText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    alignItems: 'center',
   },
 })
 
-export default CheckInScreen;
+// CheckInScreen is already exported as a named export

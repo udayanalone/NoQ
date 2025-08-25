@@ -1,44 +1,35 @@
 import React, { useState } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { useNavigation } from '@react-navigation/native'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { RootStackParamList } from '../navigation/type'
+import { useAppContext } from '../context/AppContext'
 
-interface Reservation {
-  id: string
-  storeName: string
-  date: string
-  time: string
-  status: 'confirmed' | 'pending' | 'cancelled'
-}
-
-const mockReservations: Reservation[] = [
-  {
-    id: '1',
-    storeName: 'Tech Haven Electronics',
-    date: 'Today',
-    time: '10:30 AM',
-    status: 'confirmed'
-  },
-  {
-    id: '2',
-    storeName: 'Cafe Delight',
-    date: 'Tomorrow',
-    time: '02:00 PM',
-    status: 'confirmed'
-  },
-  {
-    id: '3',
-    storeName: 'Pet Care Plus',
-    date: 'Apr 25',
-    time: '04:00 PM',
-    status: 'confirmed'
-  }
-]
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>
 
 export function ReservationsScreen() {
+  const navigation = useNavigation<NavigationProp>()
+  const { bookings } = useAppContext()
   const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>('upcoming')
 
-  const renderReservationCard = (reservation: Reservation) => (
-    <TouchableOpacity key={reservation.id} style={styles.reservationCard}>
+  const handleReservationPress = (reservation: any) => {
+    // Navigate to store details
+    navigation.navigate('StoreDetails', { storeId: reservation.storeId })
+  }
+
+  const handleBookNewSlot = () => {
+    // Navigate to home tab to book a new slot
+    // Since we're in a tab navigator, we need to navigate to the root and then to home
+    navigation.navigate('MainTabs' as any)
+  }
+
+  const renderReservationCard = (reservation: any) => (
+    <TouchableOpacity 
+      key={reservation.id} 
+      style={styles.reservationCard}
+      onPress={() => handleReservationPress(reservation)}
+    >
       <View style={styles.cardContent}>
         <View style={styles.cardLeft}>
           <Text style={styles.storeName}>{reservation.storeName}</Text>
@@ -49,7 +40,7 @@ export function ReservationsScreen() {
             <Text style={styles.statusText}>Confirmed</Text>
           </View>
           <View style={styles.cardIcons}>
-            <Ionicons name="qr-code" size={20} color="#666" />
+            <Ionicons name="ticket-outline" size={20} color="#666" />
             <Ionicons name="chevron-forward" size={16} color="#ccc" />
           </View>
         </View>
@@ -59,6 +50,12 @@ export function ReservationsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>NoQ Reservations</Text>
+        <Text style={styles.headerSubtitle}>Manage Your Bookings</Text>
+      </View>
+
       {/* Segmented Control */}
       <View style={styles.segmentedControl}>
         <TouchableOpacity
@@ -82,7 +79,15 @@ export function ReservationsScreen() {
       {/* Reservations List */}
       <ScrollView style={styles.reservationsList} showsVerticalScrollIndicator={false}>
         {activeTab === 'upcoming' ? (
-          mockReservations.map(renderReservationCard)
+          bookings.length > 0 ? (
+            bookings.map(renderReservationCard)
+          ) : (
+            <View style={styles.emptyState}>
+              <Ionicons name="calendar-outline" size={48} color="#ccc" />
+              <Text style={styles.emptyText}>No upcoming reservations</Text>
+              <Text style={styles.emptySubtext}>Book your first NoQ slot!</Text>
+            </View>
+          )
         ) : (
           <View style={styles.emptyState}>
             <Ionicons name="time-outline" size={48} color="#ccc" />
@@ -92,9 +97,9 @@ export function ReservationsScreen() {
       </ScrollView>
 
       {/* Book New Slot Button */}
-      <TouchableOpacity style={styles.bookButton}>
+      <TouchableOpacity style={styles.bookButton} onPress={handleBookNewSlot}>
         <Ionicons name="add" size={20} color="#fff" style={styles.bookIcon} />
-        <Text style={styles.bookButtonText}>Book New Slot</Text>
+        <Text style={styles.bookButtonText}>Book New NoQ Slot</Text>
       </TouchableOpacity>
     </SafeAreaView>
   )
@@ -104,6 +109,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  header: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    paddingTop: 40,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#fff',
+    opacity: 0.9,
   },
   segmentedControl: {
     flexDirection: 'row',
@@ -199,6 +221,11 @@ const styles = StyleSheet.create({
     color: '#999',
     marginTop: 12,
   },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#ccc',
+    marginTop: 4,
+  },
   bookButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -224,4 +251,4 @@ const styles = StyleSheet.create({
   },
 })
 
-export default ReservationsScreen; 
+export default ReservationsScreen;

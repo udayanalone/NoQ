@@ -1,16 +1,23 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert } from "react-native";
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
-import { storeInfo } from '../dummy/data'
+// import { storeInfo } from '../dummy/data'
 import { useRoute } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
+import React, { useEffect, useState } from 'react'
+import { api } from '../lib/api'
 
 type Props = NativeStackScreenProps<any, 'StoreDetails'>;
 
 const StoreDetailsScreen = ({ navigation }: Props) => {
     const route = useRoute<any>();
     const storeId = route.params?.storeId;
-    const store = storeInfo.find(s => s.id === storeId) || storeInfo[0];
+    const [store, setStore] = useState<any | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    useEffect(() => {
+        api.getStore(storeId)
+            .then(setStore)
+            .catch((e)=>setError(e.message))
+    }, [storeId])
 
     const renderStars = (rating: number) => {
         const stars = [];
@@ -27,7 +34,12 @@ const StoreDetailsScreen = ({ navigation }: Props) => {
         return stars;
     };
 
-    const openingHours = [
+    // Get current day of the week
+    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const currentDay = daysOfWeek[new Date().getDay()];
+    
+    // Use opening hours from store data or fallback to default
+    const openingHours = store?.openingHours || [
         { day: 'Monday', hours: '9:00 AM - 8:00 PM' },
         { day: 'Tuesday', hours: '9:00 AM - 8:00 PM' },
         { day: 'Wednesday', hours: '9:00 AM - 8:00 PM' },
@@ -37,9 +49,24 @@ const StoreDetailsScreen = ({ navigation }: Props) => {
         { day: 'Sunday', hours: '11:00 AM - 6:00 PM' },
     ];
 
+    const handleBookSlot = () => {
+        const nextSlot = store?.availableSlots?.[0] || '3:00 PM';
+        navigation.navigate('SlotBooking', { storeId: store.id, selectedSlot: nextSlot });
+    };
+
+    const handleCallStore = () => {
+        Alert.alert('Call Store', `Calling ${store.phone}`, [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Call', onPress: () => console.log('Calling store') }
+        ]);
+    };
+
     return (
         <ScrollView style={styles.container}>
             {/* Store Image Section */}
+            {!store ? (
+                <View style={styles.section}><Text>Loading...</Text>{error && <Text>{error}</Text>}</View>
+            ) : (
             <View style={styles.imageContainer}>
                 <Image
                     source={{ uri: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=400&fit=crop' }}
@@ -51,13 +78,14 @@ const StoreDetailsScreen = ({ navigation }: Props) => {
                     <Text style={styles.storeRating}>{store.rating}/5</Text>
                 </View>
             </View>
+            )}
 
             {/* Rating Section */}
             <View style={styles.ratingSection}>
                 <View style={styles.starsContainer}>
-                    {renderStars(store.rating)}
+                    {renderStars(store?.rating || 0)}
                 </View>
-                <Text style={styles.ratingText}>{store.rating}/5</Text>
+                <Text style={styles.ratingText}>{store?.rating}/5</Text>
             </View>
 
             {/* Key Metrics Section */}
@@ -68,7 +96,7 @@ const StoreDetailsScreen = ({ navigation }: Props) => {
                         <Text style={styles.metricTitle}>Wait Time</Text>
                     </View>
                     <View style={styles.metricValue}>
-                        <Text style={styles.metricNumber}>{store.waitTime} min</Text>
+                        <Text style={styles.metricNumber}>{store?.waitTime} min</Text>
                         <Text style={styles.metricSubtext}>Current wait</Text>
                     </View>
                 </View>
@@ -79,7 +107,7 @@ const StoreDetailsScreen = ({ navigation }: Props) => {
                         <Text style={styles.metricTitle}>Occupancy</Text>
                     </View>
                     <View style={styles.metricValue}>
-                        <Text style={styles.metricNumber}>{store.occupancy}</Text>
+                        <Text style={styles.metricNumber}>{store?.occupancy}</Text>
                         <Text style={styles.metricSubtext}>Live status</Text>
                     </View>
                 </View>
@@ -90,8 +118,27 @@ const StoreDetailsScreen = ({ navigation }: Props) => {
                         <Text style={styles.metricTitle}>Next Free Slot</Text>
                     </View>
                     <View style={styles.metricValue}>
-                        <Text style={styles.metricNumber}>Today, {store.nextSlot}</Text>
+                        <Text style={styles.metricNumber}>Today, {store?.nextSlot}</Text>
                         <Text style={styles.metricSubtext}>Book now to reserve</Text>
+                    </View>
+                </View>
+            </View>
+
+            {/* Contact Section */}
+            <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Contact Information</Text>
+                <View style={styles.contactContainer}>
+                    <TouchableOpacity style={styles.contactItem} onPress={handleCallStore}>
+                        <Ionicons name="call" size={20} color="#4CAF50" />
+                        <Text style={styles.contactText}>{store?.phone}</Text>
+                    </TouchableOpacity>
+                    <View style={styles.contactItem}>
+                        <Ionicons name="mail" size={20} color="#4CAF50" />
+                        <Text style={styles.contactText}>{store?.email}</Text>
+                    </View>
+                    <View style={styles.contactItem}>
+                        <Ionicons name="location" size={20} color="#4CAF50" />
+                        <Text style={styles.contactText}>{store?.address}</Text>
                     </View>
                 </View>
             </View>
@@ -129,12 +176,15 @@ const StoreDetailsScreen = ({ navigation }: Props) => {
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Opening Hours</Text>
                 <View style={styles.hoursContainer}>
-                    {openingHours.map((item, index) => (
+                    {openingHours.map((item: { day: string; hours: string }, index: number) => (
                         <View key={index} style={styles.hourRow}>
-                            <Text style={styles.dayText}>{item.day}</Text>
+                            <Text style={[
+                                styles.dayText,
+                                item.day === currentDay && styles.highlightedText
+                            ]}>{item.day}</Text>
                             <Text style={[
                                 styles.hourText,
-                                item.day === 'Friday' && styles.highlightedText
+                                item.day === currentDay && styles.highlightedText
                             ]}>
                                 {item.hours}
                             </Text>
@@ -146,7 +196,7 @@ const StoreDetailsScreen = ({ navigation }: Props) => {
             {/* Book Slot Button */}
             <TouchableOpacity
                 style={styles.bookButton}
-                onPress={() => navigation.navigate('SlotBooking', { storeId: store.id, selectedSlot: store.nextSlot })}
+                onPress={handleBookSlot}
             >
                 <Ionicons name="calendar" size={20} color="#fff" style={styles.bookIcon} />
                 <Text style={styles.bookButtonText}>Book This Slot</Text>
@@ -252,6 +302,21 @@ const styles = StyleSheet.create({
         color: '#333',
         marginBottom: 16,
     },
+    contactContainer: {
+        backgroundColor: '#f8f8f8',
+        borderRadius: 8,
+        padding: 16,
+    },
+    contactItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 8,
+    },
+    contactText: {
+        fontSize: 14,
+        color: '#333',
+        marginLeft: 12,
+    },
     heatmapContainer: {
         alignItems: 'center',
     },
@@ -328,7 +393,7 @@ const styles = StyleSheet.create({
     bookButtonText: {
         color: '#fff',
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: '600',
     },
 });
 
